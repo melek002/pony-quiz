@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pony Personality Quiz</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #fdf2f8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #quiz-container {
+      max-width: 600px;
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    h2 {
+      color: #d63384;
+    }
+    .option {
+      background: #f8d7da;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .option:hover {
+      background: #f1aeb5;
+    }
+    #result {
+      display: none;
+      font-size: 18px;
+      margin-top: 20px;
+    }
+    #restart {
+      display: none;
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #d63384;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    #restart:hover {
+      background-color: #b92d6b;
+    }
+  </style>
+</head>
+<body>
+  <div id="quiz-container">
+    <h2 id="question"></h2>
+    <div id="options"></div>
+    <div id="result"></div>
+    <button id="restart" onclick="restartQuiz()">Retake Quiz</button>
+  </div>
+
+  <script>
+    const ponies = ["Twilight Sparkle", "Pinkie Pie", "Rainbow Dash", "Rarity", "Apple Jack", "Flutter Shy"];
+    let scores, currentQuestion;
+
+    const questions = [
+      {
+        text: "You're running late to a social event. What do you do when you arrive?",
+        options: [
+          { text: "Apologize and try to make it up to everyone.", scores: [2, 0, 1, 1, 1, 1] },
+          { text: "Enter with a joke and lighten the mood.", scores: [0, 3, 0, 1, 1, 1] },
+          { text: "Make a quick entrance and blend in.", scores: [1, 1, 2, 1, 2, 0] },
+          { text: "Use it as a chance to compliment everyone's outfits.", scores: [1, 1, 0, 3, 1, 1] },
+          { text: "Offer to help clean up later to make up for it.", scores: [1, 0, 1, 1, 3, 1] }
+        ]
+      },
+      {
+        text: "You're assigned a group project with people you don't know. What's your role?",
+        options: [
+          { text: "Take charge and assign tasks.", scores: [3, 0, 2, 0, 1, 0] },
+          { text: "Crack jokes to ease the tension.", scores: [0, 3, 0, 0, 0, 1] },
+          { text: "Motivate the team and push for results.", scores: [1, 0, 3, 0, 2, 0] },
+          { text: "Design the presentation and make it shine.", scores: [1, 0, 0, 3, 0, 1] },
+          { text: "Support wherever needed and keep peace.", scores: [0, 0, 0, 0, 2, 3] }
+        ]
+      },
+      {
+        text: "You're overwhelmed with tasks and deadlines. How do you cope?",
+        options: [
+          { text: "Make a detailed plan and stick to it.", scores: [3, 0, 0, 1, 1, 0] },
+          { text: "Call a friend and vent.", scores: [0, 3, 0, 1, 0, 2] },
+          { text: "Push through with determination.", scores: [1, 0, 3, 0, 2, 0] },
+          { text: "Buy something small to cheer yourself up.", scores: [0, 1, 0, 3, 0, 1] },
+          { text: "Take a break in nature.", scores: [0, 1, 0, 0, 1, 3] }
+        ]
+      },
+      {
+        text: "You're offered a promotion but it means relocating far away. What do you do?",
+        options: [
+          { text: "Analyze the pros and cons first.", scores: [3, 0, 1, 1, 0, 1] },
+          { text: "Say yes immediately, new adventure!", scores: [0, 3, 2, 0, 1, 0] },
+          { text: "Consult your close friends and family.", scores: [1, 2, 1, 0, 0, 2] },
+          { text: "Think about how you can express yourself in a new place.", scores: [1, 1, 1, 3, 0, 0] },
+          { text: "Prioritize your roots and community.", scores: [0, 0, 0, 0, 3, 2] }
+        ]
+      },
+      {
+        text: "You walk into a room where everyone knows each other except you. What do you do?",
+        options: [
+          { text: "Introduce yourself with a warm smile.", scores: [2, 1, 1, 0, 1, 1] },
+          { text: "Make a loud, fun entrance.", scores: [0, 3, 1, 0, 0, 0] },
+          { text: "Look for someone who seems quiet and start a conversation.", scores: [0, 0, 0, 0, 1, 3] },
+          { text: "Show off your skills or fashion subtly.", scores: [1, 0, 1, 3, 0, 0] },
+          { text: "Stay near the food and slowly ease into the crowd.", scores: [0, 1, 0, 1, 2, 1] }
+        ]
+      },
+      {
+        text: "Your friend is going through a tough breakup. How do you help?",
+        options: [
+          { text: "Help them make a plan for recovery.", scores: [3, 0, 1, 0, 1, 1] },
+          { text: "Cheer them up with a surprise activity.", scores: [0, 3, 0, 0, 0, 0] },
+          { text: "Offer words of encouragement and support.", scores: [0, 1, 1, 0, 0, 3] },
+          { text: "Treat them to a makeover or spa day.", scores: [0, 0, 0, 3, 0, 0] },
+          { text: "Invite them to do something practical like gardening or fixing something.", scores: [0, 0, 2, 0, 3, 0] }
+        ]
+      },
+      {
+        text: "You’re in charge of planning a community event. What’s your style?",
+        options: [
+          { text: "Detailed schedules and back-up plans.", scores: [3, 0, 1, 0, 2, 0] },
+          { text: "Exciting games and entertainment!", scores: [0, 3, 0, 0, 0, 0] },
+          { text: "A team rallying cry and bold themes.", scores: [1, 0, 3, 0, 1, 0] },
+          { text: "Elegant decorations and thoughtful gifts.", scores: [0, 0, 0, 3, 0, 1] },
+          { text: "Simple but meaningful with personal touches.", scores: [0, 0, 0, 0, 1, 3] }
+        ]
+      },
+      {
+        text: "How do you handle being misunderstood?",
+        options: [
+          { text: "Explain yourself clearly and calmly.", scores: [3, 0, 0, 1, 1, 0] },
+          { text: "Make a joke to lighten the misunderstanding.", scores: [0, 3, 1, 0, 0, 0] },
+          { text: "Let your actions speak louder than words.", scores: [1, 0, 3, 0, 2, 0] },
+          { text: "Feel a little hurt but try to understand.", scores: [1, 0, 0, 0, 0, 3] },
+          { text: "Get creative in showing your true colors.", scores: [1, 0, 0, 3, 0, 1] }
+        ]
+      },
+      {
+        text: "What motivates you most in your daily life?",
+        options: [
+          { text: "Learning and growth.", scores: [3, 0, 1, 0, 1, 1] },
+          { text: "Fun and laughter.", scores: [0, 3, 0, 1, 0, 0] },
+          { text: "Achieving goals and winning.", scores: [1, 0, 3, 0, 2, 0] },
+          { text: "Beauty, art, and expression.", scores: [0, 0, 0, 3, 0, 1] },
+          { text: "Helping others and being kind.", scores: [0, 0, 0, 0, 1, 3] }
+        ]
+      },
+      {
+        text: "Which place feels most like home to you?",
+        options: [
+          { text: "A quiet library or study nook.", scores: [3, 0, 0, 1, 0, 1] },
+          { text: "A lively party or celebration.", scores: [0, 3, 1, 0, 0, 0] },
+          { text: "A sports field or competition arena.", scores: [0, 0, 3, 0, 1, 0] },
+          { text: "A fashion studio or boutique.", scores: [0, 0, 0, 3, 0, 0] },
+          { text: "A peaceful countryside farm.", scores: [0, 0, 0, 0, 3, 2] }
+        ]
+      },
+      {
+        text: "What kind of friend are you?",
+        options: [
+          { text: "The wise and helpful one.", scores: [3, 0, 1, 0, 1, 1] },
+          { text: "The fun and spontaneous one.", scores: [0, 3, 1, 0, 0, 0] },
+          { text: "The brave and daring one.", scores: [0, 0, 3, 0, 1, 0] },
+          { text: "The stylish and generous one.", scores: [0, 0, 0, 3, 0, 1] },
+          { text: "The gentle and understanding one.", scores: [0, 0, 0, 0, 1, 3] }
+        ]
+      },
+      {
+        text: "Which activity sounds most appealing right now?",
+        options: [
+          { text: "Reading or researching something new.", scores: [3, 0, 0, 1, 0, 0] },
+          { text: "Hosting or attending a party.", scores: [0, 3, 1, 0, 0, 0] },
+          { text: "Playing sports or going on an adventure.", scores: [0, 0, 3, 0, 2, 0] },
+          { text: "Creating or designing something.", scores: [0, 0, 0, 3, 0, 1] },
+          { text: "Caring for animals or plants.", scores: [0, 0, 0, 0, 1, 3] }
+        ]
+      }
+    ];
+
+    function initQuiz() {
+      scores = Array(ponies.length).fill(0);
+      currentQuestion = 0;
+      document.getElementById("question").style.display = "block";
+      document.getElementById("options").style.display = "block";
+      document.getElementById("result").style.display = "none";
+      document.getElementById("restart").style.display = "none";
+      showQuestion();
+    }
+
+    function showQuestion() {
+      if (currentQuestion >= questions.length) {
+        showResult();
+        return;
+      }
+      const q = questions[currentQuestion];
+      document.getElementById("question").textContent = `Question ${currentQuestion + 1}: ${q.text}`;
+      const optionsDiv = document.getElementById("options");
+      optionsDiv.innerHTML = "";
+
+      q.options.forEach((opt) => {
+        const div = document.createElement("div");
+        div.className = "option";
+        div.textContent = opt.text;
+        div.onclick = () => {
+          opt.scores.forEach((score, i) => scores[i] += score);
+          currentQuestion++;
+          showQuestion();
+        };
+        optionsDiv.appendChild(div);
+      });
+    }
+
+    function showResult() {
+  const total = scores.reduce((a, b) => a + b, 0);
+  const percentages = scores.map(s => total ? Math.round((s / total) * 100) : 0);
+
+  // Find highest score index
+  let topIndex = scores.indexOf(Math.max(...scores));
+
+  // Pony data
+  const ponyThemes = [
+    { name: "Twilight Sparkle", color: "#6b5b95", image: "twilight.png" },
+    { name: "Pinkie Pie", color: "#ff69b4", image: "pinkie.png" },
+    { name: "Rainbow Dash", color: "#00bfff", image: "rainbow.png" },
+    { name: "Rarity", color: "#b19cd9", image: "rarity.png" },
+    { name: "Apple Jack", color: "#f4a460", image: "applejack.png" },
+    { name: "Flutter Shy", color: "#fddde6", image: "fluttershy.png" }
+  ];
+
+  const resultDiv = document.getElementById("result");
+  const pony = ponyThemes[topIndex];
+
+  // Apply pony color to result background
+  resultDiv.style.backgroundColor = pony.color;
+  resultDiv.style.borderRadius = "10px";
+  resultDiv.style.padding = "15px";
+
+  // Create result HTML
+  let result = `<h3>Your Top Pony Match: ${pony.name}</h3>`;
+  result += `<img src="${pony.image}" alt="${pony.name}" style="width:100%; max-width:300px; border-radius:10px; margin-bottom:15px;" />`;
+  result += `<ul>`;
+  ponies.forEach((p, i) => {
+    result += `<li><strong>${p}</strong>: ${percentages[i]}%</li>`;
+  });
+  result += `</ul>`;
+
+  // Hide quiz, show result
+  document.getElementById("options").style.display = "none";
+  document.getElementById("question").style.display = "none";
+  resultDiv.style.display = "block";
+  resultDiv.innerHTML = result;
+  document.getElementById("restart").style.display = "inline-block";
+}
+
+
+    function restartQuiz() {
+      initQuiz();
+    }
+
+    initQuiz();
+  </script>
+</body>
+</html>
